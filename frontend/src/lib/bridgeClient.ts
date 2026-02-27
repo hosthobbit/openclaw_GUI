@@ -34,7 +34,8 @@ class BridgeClient {
 
   private getWsUrl() {
     const base = this.getBaseHttpUrl().replace(/^http/, 'ws');
-    const apiKey = import.meta.env.VITE_BRIDGE_API_KEY ?? '';
+    const apiKey =
+      (import.meta.env.VITE_BRIDGE_API_KEY as string | undefined) || 'dev-bridge-key';
     const params = new URLSearchParams();
     if (apiKey) params.set('apiKey', apiKey);
     return `${base}/ws?${params.toString()}`;
@@ -90,7 +91,8 @@ class BridgeClient {
   }
 
   async fetchInitialData() {
-    const apiKey = import.meta.env.VITE_BRIDGE_API_KEY ?? '';
+    const apiKey =
+      (import.meta.env.VITE_BRIDGE_API_KEY as string | undefined) || 'dev-bridge-key';
     const resAgents = await fetch(`${this.getBaseHttpUrl()}/api/agents`, {
       headers: apiKey ? { 'x-api-key': apiKey } : {}
     });

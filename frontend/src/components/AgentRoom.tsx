@@ -19,6 +19,7 @@ type AgentMeta = {
   visual: VisualAgentContext;
   sprites: WorkerSprites;
   speech?: Phaser.GameObjects.Container;
+  dragging?: boolean;
 };
 
 type Link = {
@@ -47,6 +48,10 @@ class RoomScene extends Phaser.Scene {
   private modeOverlay!: Phaser.GameObjects.Graphics;
   private linkPhase = 0;
   private events: BridgeEvent[] = [];
+  private draggingMeta: AgentMeta | null = null;
+  private canvasMouseDownBound?: (e: MouseEvent) => void;
+  private canvasMouseMoveBound?: (e: MouseEvent) => void;
+  private canvasMouseUpBound?: (e: MouseEvent) => void;
 
   constructor() {
     super('RoomScene');
@@ -70,18 +75,134 @@ class RoomScene extends Phaser.Scene {
     const height = this.scale.height;
     this.layout = buildOfficeLayout(width, height);
 
-    this.bgGraphics = this.add.graphics();
+    this.bgGraphics = this.add.graphics().setDepth(-10);
     this.drawOffice();
 
-    this.modeOverlay = this.add.graphics();
+    this.modeOverlay = this.add.graphics().setDepth(-10).disableInteractive();
+    this.linksGraphics = this.add.graphics().setDepth(-10).disableInteractive();
 
-    this.linksGraphics = this.add.graphics();
+    this.input.on('pointerdown', this.handlePointerDown, this);
+    this.input.on('pointerup', this.handlePointerUp, this);
+    this.input.on('pointerupoutside', this.handlePointerUp, this);
+
+    const canvas = this.sys.game.canvas;
+    this.canvasMouseDownBound = this.onCanvasMouseDown.bind(this);
+    this.canvasMouseMoveBound = this.onCanvasMouseMove.bind(this);
+    this.canvasMouseUpBound = this.onCanvasMouseUp.bind(this);
+    canvas.addEventListener('mousedown', this.canvasMouseDownBound);
+    window.addEventListener('mousemove', this.canvasMouseMoveBound);
+    window.addEventListener('mouseup', this.canvasMouseUpBound);
 
     this.time.addEvent({
       delay: 80,
       loop: true,
       callback: () => this.step()
     });
+  }
+
+  shutdown() {
+    const canvas = this.sys?.game?.canvas;
+    if (canvas && this.canvasMouseDownBound) {
+      canvas.removeEventListener('mousedown', this.canvasMouseDownBound);
+    }
+    if (this.canvasMouseMoveBound) {
+      window.removeEventListener('mousemove', this.canvasMouseMoveBound);
+    }
+    if (this.canvasMouseUpBound) {
+      window.removeEventListener('mouseup', this.canvasMouseUpBound);
+    }
+  }
+
+  private clientToWorld(clientX: number, clientY: number): { x: number; y: number } {
+    const canvas = this.sys.game.canvas;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = this.scale.width / rect.width;
+    const scaleY = this.scale.height / rect.height;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  private onCanvasMouseDown(e: MouseEvent) {
+    if (this.draggingMeta) return;
+    const { x, y } = this.clientToWorld(e.clientX, e.clientY);
+    const pad = 25;
+    for (const meta of this.metas.values()) {
+      const b = meta.sprites.body.getBounds();
+      if (
+        x >= b.x - pad &&
+        x <= b.x + b.width + pad &&
+        y >= b.y - pad &&
+        y <= b.y + b.height + pad
+      ) {
+        this.draggingMeta = meta;
+        meta.dragging = true;
+        meta.sprites.body.setDepth(100);
+        e.preventDefault();
+        break;
+      }
+    }
+  }
+
+  private onCanvasMouseMove(e: MouseEvent) {
+    if (!this.draggingMeta) return;
+    const { x, y } = this.clientToWorld(e.clientX, e.clientY);
+    const meta = this.draggingMeta;
+    meta.sprites.body.x = x;
+    meta.sprites.body.y = y;
+    meta.sprites.label.setPosition(x, y + 26);
+    if (meta.speech) {
+      meta.speech.x = x;
+      meta.speech.y = y - 34;
+    }
+  }
+
+  private onCanvasMouseUp() {
+    if (this.draggingMeta) {
+      const meta = this.draggingMeta;
+      meta.dragging = false;
+      meta.sprites.body.setDepth(10);
+      meta.visual.deskX = meta.sprites.body.x;
+      meta.visual.deskY = meta.sprites.body.y;
+      meta.visual.hallwayX = meta.sprites.body.x;
+      meta.visual.hallwayY = meta.sprites.body.y;
+      this.draggingMeta = null;
+    }
+  }
+
+  private handlePointerDown(ptr: Phaser.Input.Pointer) {
+    if (this.draggingMeta) return;
+    const x = ptr.worldX;
+    const y = ptr.worldY;
+    const pad = 15;
+    for (const meta of this.metas.values()) {
+      const b = meta.sprites.body.getBounds();
+      if (
+        x >= b.x - pad &&
+        x <= b.x + b.width + pad &&
+        y >= b.y - pad &&
+        y <= b.y + b.height + pad
+      ) {
+        this.draggingMeta = meta;
+        meta.dragging = true;
+        meta.sprites.body.setDepth(100);
+        break;
+      }
+    }
+  }
+
+  private handlePointerUp() {
+    if (this.draggingMeta) {
+      const meta = this.draggingMeta;
+      meta.dragging = false;
+      meta.sprites.body.setDepth(10);
+      meta.visual.deskX = meta.sprites.body.x;
+      meta.visual.deskY = meta.sprites.body.y;
+      meta.visual.hallwayX = meta.sprites.body.x;
+      meta.visual.hallwayY = meta.sprites.body.y;
+      this.draggingMeta = null;
+    }
   }
 
   private drawOffice() {
@@ -175,8 +296,9 @@ class RoomScene extends Phaser.Scene {
       );
 
       const sprites = createWorkerSprite(this, desk.x, desk.y, role, agent.agent_name);
-      meta = { visual, sprites };
+      meta = { visual, sprites, dragging: false };
       this.metas.set(agent.agent_id, meta);
+      meta.sprites.body.setDepth(10);
     }
 
     return meta;
@@ -231,6 +353,20 @@ class RoomScene extends Phaser.Scene {
   private step() {
     const now = Date.now();
 
+    if (this.draggingMeta && this.input.activePointer.isDown) {
+      const ptr = this.input.activePointer;
+      const x = ptr.worldX;
+      const y = ptr.worldY;
+      const meta = this.draggingMeta;
+      meta.sprites.body.x = x;
+      meta.sprites.body.y = y;
+      meta.sprites.label.setPosition(x, y + 26);
+      if (meta.speech) {
+        meta.speech.x = x;
+        meta.speech.y = y - 34;
+      }
+    }
+
     this.modeOverlay.clear();
     if (this.mode === 'ops') {
       this.modeOverlay.fillStyle(0x0b1220, 0.18);
@@ -263,6 +399,16 @@ class RoomScene extends Phaser.Scene {
       const idx = roleCounter[role]++;
       const meta = this.ensureMeta(agent, idx);
 
+      const { body, label } = meta.sprites;
+      if (meta.dragging) {
+        label.setPosition(body.x, body.y + 26);
+        if (meta.speech) {
+          meta.speech.x = body.x;
+          meta.speech.y = body.y - 34;
+        }
+        return;
+      }
+
       // Advance state machine
       const bridgeState = agent.state;
       const updatedVisual = updateVisualState(
@@ -278,7 +424,6 @@ class RoomScene extends Phaser.Scene {
 
       meta.visual = updatedVisual;
 
-      const { body, label } = meta.sprites;
       let targetX = body.x;
       let targetY = body.y;
 
