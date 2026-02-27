@@ -593,6 +593,33 @@ class RoomScene extends Phaser.Scene {
       }
     });
 
+    // Explicit social chain: Social Fox hub -> Facebook Falcon + Blog Beaver
+    const posById = new Map<string, Phaser.Math.Vector2>();
+    for (const a of this.agents) {
+      const meta = this.metas.get(a.agent_id);
+      if (meta) posById.set(a.agent_id, new Phaser.Math.Vector2(meta.sprites.body.x, meta.sprites.body.y));
+    }
+    const hub = posById.get('social-1');
+    const fb = posById.get('facebook-1');
+    const blog = posById.get('blog-1');
+    const drawChain = (a?: Phaser.Math.Vector2, b?: Phaser.Math.Vector2) => {
+      if (!a || !b) return;
+      this.linksGraphics.lineStyle(1.6, 0x60a5fa, 0.7);
+      this.linksGraphics.beginPath();
+      this.linksGraphics.moveTo(a.x, a.y);
+      this.linksGraphics.lineTo(b.x, b.y);
+      this.linksGraphics.strokePath();
+      for (let i = 0; i <= 5; i++) {
+        const t = (i / 5 + this.linkPhase) % 1;
+        const x = Phaser.Math.Linear(a.x, b.x, t);
+        const y = Phaser.Math.Linear(a.y, b.y, t);
+        this.linksGraphics.fillStyle(0xef4444, 0.95);
+        this.linksGraphics.fillRoundedRect(x - 2.8, y - 1.4, 5.6, 2.8, 1.4);
+      }
+    };
+    drawChain(hub, fb);
+    drawChain(hub, blog);
+
   }
 }
 

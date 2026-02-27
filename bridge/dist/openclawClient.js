@@ -49,6 +49,12 @@ class MockOpenClawClient {
                 role: 'support'
             },
             {
+                agent_id: 'social-1',
+                agent_name: 'Social Fox',
+                state: 'idle',
+                role: 'social'
+            },
+            {
                 agent_id: 'facebook-1',
                 agent_name: 'Facebook Falcon',
                 state: 'idle',
@@ -205,6 +211,7 @@ class LocalTelemetryClient {
             { agent_id: 'jarvis', agent_name: 'Jarvis', role: 'supervisor', state: 'working', lastSeen: now },
             { agent_id: 'ops-1', agent_name: 'Ops Owl', role: 'ops', state: opsState, lastSeen: now },
             { agent_id: 'support-1', agent_name: 'Support Squirrel', role: 'support', state: supportState, lastSeen: now },
+            { agent_id: 'social-1', agent_name: 'Social Fox', role: 'social', state: 'working', lastSeen: now },
             { agent_id: 'facebook-1', agent_name: 'Facebook Falcon', role: 'social', state: facebookState, lastSeen: now },
             { agent_id: 'blog-1', agent_name: 'Blog Beaver', role: 'social', state: wpBlogState, lastSeen: now },
             { agent_id: 'postman-1', agent_name: 'Postman', role: 'email', state: postmanState, lastSeen: now }
@@ -295,6 +302,16 @@ class LocalTelemetryClient {
                 ? 'WordPress blog publishing activity detected'
                 : 'No recent WordPress blog publish activity detected',
             ts: now - 3000,
+            severity: 'info'
+        });
+        // Social coordinator activity
+        events.push({
+            id: `social-hub-${tick}`,
+            agent_id: 'social-1',
+            agent_name: 'Social Fox',
+            state: 'working',
+            task_summary: 'Coordinating Facebook + WordPress content pipeline',
+            ts: now - 3200,
             severity: 'info'
         });
         // Social activity from latest FB post result (only latest post for clarity)

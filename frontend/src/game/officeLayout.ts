@@ -54,16 +54,21 @@ export function buildOfficeLayout(width: number, height: number): OfficeLayout {
       y: roomRect.y - roomRect.height * 0.18
     },
 
-    // Social cluster (right)
+    // Social cluster (right): Fox hub on top, Facebook/Blog workers below
     {
       role: 'social',
       x: roomRect.x + roomRect.width * 0.26,
-      y: roomRect.y - roomRect.height * 0.05
+      y: roomRect.y - roomRect.height * 0.14
     },
     {
       role: 'social',
-      x: roomRect.x + roomRect.width * 0.26,
-      y: roomRect.y + roomRect.height * 0.12
+      x: roomRect.x + roomRect.width * 0.22,
+      y: roomRect.y + roomRect.height * 0.03
+    },
+    {
+      role: 'social',
+      x: roomRect.x + roomRect.width * 0.30,
+      y: roomRect.y + roomRect.height * 0.16
     },
 
     // Email/Postman cluster
