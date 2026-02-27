@@ -127,21 +127,24 @@ class RoomScene extends Phaser.Scene {
   private onCanvasMouseDown(e: MouseEvent) {
     if (this.draggingMeta) return;
     const { x, y } = this.clientToWorld(e.clientX, e.clientY);
-    const pad = 25;
+
+    let picked: AgentMeta | null = null;
+    let best = Number.POSITIVE_INFINITY;
     for (const meta of this.metas.values()) {
-      const b = meta.sprites.body.getBounds();
-      if (
-        x >= b.x - pad &&
-        x <= b.x + b.width + pad &&
-        y >= b.y - pad &&
-        y <= b.y + b.height + pad
-      ) {
-        this.draggingMeta = meta;
-        meta.dragging = true;
-        meta.sprites.body.setDepth(100);
-        e.preventDefault();
-        break;
+      const dx = meta.sprites.body.x - x;
+      const dy = meta.sprites.body.y - y;
+      const d = Math.hypot(dx, dy);
+      if (d < best) {
+        best = d;
+        picked = meta;
       }
+    }
+
+    if (picked && best <= 80) {
+      this.draggingMeta = picked;
+      picked.dragging = true;
+      picked.sprites.body.setDepth(100);
+      e.preventDefault();
     }
   }
 
@@ -175,20 +178,23 @@ class RoomScene extends Phaser.Scene {
     if (this.draggingMeta) return;
     const x = ptr.worldX;
     const y = ptr.worldY;
-    const pad = 15;
+
+    let picked: AgentMeta | null = null;
+    let best = Number.POSITIVE_INFINITY;
     for (const meta of this.metas.values()) {
-      const b = meta.sprites.body.getBounds();
-      if (
-        x >= b.x - pad &&
-        x <= b.x + b.width + pad &&
-        y >= b.y - pad &&
-        y <= b.y + b.height + pad
-      ) {
-        this.draggingMeta = meta;
-        meta.dragging = true;
-        meta.sprites.body.setDepth(100);
-        break;
+      const dx = meta.sprites.body.x - x;
+      const dy = meta.sprites.body.y - y;
+      const d = Math.hypot(dx, dy);
+      if (d < best) {
+        best = d;
+        picked = meta;
       }
+    }
+
+    if (picked && best <= 80) {
+      this.draggingMeta = picked;
+      picked.dragging = true;
+      picked.sprites.body.setDepth(100);
     }
   }
 
