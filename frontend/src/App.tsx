@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AgentRoom } from './components/AgentRoom';
 import { RightPanel } from './components/RightPanel';
 import { Timeline } from './components/Timeline';
+import { ConversationPanel } from './components/ConversationPanel';
 import { createBridgeClient, BridgeEvent, AgentState } from './lib/bridgeClient';
 
 type UIMode = 'ops' | 'fun';
@@ -253,8 +254,11 @@ export const App: React.FC = () => {
 
 
       <main className="layout">
-        <section className="layout-main">
-          <AgentRoom agents={agents} mode={mode} events={events} />
+        <section className="layout-main split-main">
+          <div>
+            <AgentRoom agents={agents} mode={mode} events={events} />
+          </div>
+          <ConversationPanel events={events} />
         </section>
         <aside className="layout-side">
           <RightPanel
