@@ -48,6 +48,7 @@ export const RightPanel: React.FC<Props> = ({
           <div className="stat">
             <div className="label">Agents online</div>
             <div className="value">{onlineAgents}</div>
+            <div className="small muted agent-inline-list">{agents.map(a => a.agent_name).join(' • ')}</div>
           </div>
           <div className="stat">
             <div className="label">Successes (session)</div>

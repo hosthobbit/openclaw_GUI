@@ -351,6 +351,12 @@ body {
   color: #bfdbfe;
 }
 
+.agent-inline-list {
+  margin-top: 4px;
+  line-height: 1.25;
+  white-space: normal;
+}
+
 .muted {
   color: #9ca3af;
 }

@@ -19,6 +19,7 @@ type AgentMeta = {
   visual: VisualAgentContext;
   sprites: WorkerSprites;
   speech?: Phaser.GameObjects.Container;
+  unreadBadge?: Phaser.GameObjects.Text;
   dragging?: boolean;
 };
 
@@ -361,6 +362,7 @@ class RoomScene extends Phaser.Scene {
         meta.sprites.body.destroy();
         meta.sprites.label.destroy();
         meta.speech?.destroy();
+        meta.unreadBadge?.destroy();
         this.metas.delete(id);
       }
     }
@@ -373,6 +375,16 @@ class RoomScene extends Phaser.Scene {
       supervisor: 0
     };
 
+    const unreadByAgent = new Map<string, number>();
+    for (const ev of this.events) {
+      if (!/postman/i.test(ev.agent_name) && !/postman/i.test(ev.agent_id)) continue;
+      const m = ev.task_summary.match(/(\d+)\s+unread/i);
+      if (m) {
+        unreadByAgent.set(ev.agent_id, Number(m[1]));
+        break;
+      }
+    }
+
     this.agents.forEach((agent) => {
       const role = (agent.role || 'ops') as DeskRole;
       const idx = roleCounter[role]++;
@@ -384,6 +396,9 @@ class RoomScene extends Phaser.Scene {
         if (meta.speech) {
           meta.speech.x = body.x;
           meta.speech.y = body.y - 34;
+        }
+        if (meta.unreadBadge) {
+          meta.unreadBadge.setPosition(body.x + 20, body.y - 24);
         }
         return;
       }
@@ -457,6 +472,31 @@ class RoomScene extends Phaser.Scene {
       if (meta.speech) {
         meta.speech.x = body.x;
         meta.speech.y = body.y - 34;
+      }
+
+      // Postman unread badge
+      if (role === 'email') {
+        const unread = unreadByAgent.get(agent.agent_id);
+        if (typeof unread === 'number') {
+          if (!meta.unreadBadge) {
+            meta.unreadBadge = this.add
+              .text(body.x + 20, body.y - 24, String(unread), {
+                fontSize: '12px',
+                color: '#ffffff',
+                backgroundColor: '#dc2626',
+                padding: { left: 6, right: 6, top: 2, bottom: 2 }
+              })
+              .setDepth(120)
+              .setOrigin(0.5, 0.5);
+          }
+          meta.unreadBadge.setText(String(unread));
+          meta.unreadBadge.setPosition(body.x + 20, body.y - 24);
+          meta.unreadBadge.setVisible(true);
+        } else if (meta.unreadBadge) {
+          meta.unreadBadge.setVisible(false);
+        }
+      } else if (meta.unreadBadge) {
+        meta.unreadBadge.setVisible(false);
       }
     });
 
