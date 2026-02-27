@@ -333,6 +333,16 @@ export const App: React.FC = () => {
         <section className="layout-main split-main">
           <div>
             <AgentRoom agents={agents} mode={mode} events={events} />
+            <section className="outcome-counters card">
+              <h3>Outcome counters (today)</h3>
+              <div className="outcome-grid">
+                <div className="stat"><div className="label">Tickets</div><div className="value">{todaysCounters.tickets}</div></div>
+                <div className="stat"><div className="label">Facebook posts</div><div className="value">{todaysCounters.facebook}</div></div>
+                <div className="stat"><div className="label">WordPress blogs</div><div className="value">{todaysCounters.wordpress}</div></div>
+                <div className="stat"><div className="label">Emails checked</div><div className="value">{todaysCounters.email}</div></div>
+                <div className="stat"><div className="label">Errors</div><div className="value error">{todaysCounters.errors}</div></div>
+              </div>
+            </section>
           </div>
           <ConversationPanel events={events} userStatus={userStatus} jarvisStatus={jarvisStatus} userPulse={userPulse} />
         </section>
@@ -348,17 +358,6 @@ export const App: React.FC = () => {
           />
         </aside>
       </main>
-
-      <section className="outcome-counters card">
-        <h3>Outcome counters (today)</h3>
-        <div className="outcome-grid">
-          <div className="stat"><div className="label">Tickets</div><div className="value">{todaysCounters.tickets}</div></div>
-          <div className="stat"><div className="label">Facebook posts</div><div className="value">{todaysCounters.facebook}</div></div>
-          <div className="stat"><div className="label">WordPress blogs</div><div className="value">{todaysCounters.wordpress}</div></div>
-          <div className="stat"><div className="label">Emails checked</div><div className="value">{todaysCounters.email}</div></div>
-          <div className="stat"><div className="label">Errors</div><div className="value error">{todaysCounters.errors}</div></div>
-        </div>
-      </section>
 
       <section className="timeline-wrapper">
         <Timeline events={events} />
