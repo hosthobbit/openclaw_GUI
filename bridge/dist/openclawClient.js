@@ -174,11 +174,13 @@ class LocalTelemetryClient {
         const now = Date.now();
         const lastBatch = this.readJsonSafe('fb/last_batch_posts.json');
         const tokenStatus = this.readJsonSafe('fb/last_token_rotation.json');
+        const emailStatus = this.readJsonSafe('scripts/email/postman_status.json');
         const socialState = lastBatch?.ok === true ? 'success' : lastBatch?.ok === false ? 'error' : 'idle';
         const bridgeUp = this.serviceActive('agent-theatre-bridge');
         const fallbackMode = this.hasRecentBridgeFallback(5);
         const opsState = !bridgeUp ? 'error' : fallbackMode ? 'working' : 'success';
         const supportState = tokenStatus?.ok ? 'working' : 'idle';
+        const postmanState = emailStatus?.ok === true ? ((emailStatus?.unread || 0) > 0 ? 'working' : 'success') : 'error';
         setStatus({
             mode: 'live',
             upstream: fallbackMode ? 'fallback' : 'ok',
@@ -189,7 +191,8 @@ class LocalTelemetryClient {
             { agent_id: 'jarvis', agent_name: 'Jarvis', role: 'supervisor', state: 'working', lastSeen: now },
             { agent_id: 'ops-1', agent_name: 'Ops Owl', role: 'ops', state: opsState, lastSeen: now },
             { agent_id: 'support-1', agent_name: 'Support Squirrel', role: 'support', state: supportState, lastSeen: now },
-            { agent_id: 'social-1', agent_name: 'Social Fox', role: 'social', state: socialState, lastSeen: now }
+            { agent_id: 'social-1', agent_name: 'Social Fox', role: 'social', state: socialState, lastSeen: now },
+            { agent_id: 'postman-1', agent_name: 'Postman', role: 'email', state: postmanState, lastSeen: now }
         ];
     }
     async fetchRecentEvents(limit) {
@@ -251,6 +254,20 @@ class LocalTelemetryClient {
                 : 'Ticket system is quiet right now',
             ts: now - 2800,
             severity: 'info'
+        });
+        // Email/Postman activity (sanitized)
+        const emailStatus = this.readJsonSafe('scripts/email/postman_status.json');
+        const unread = Number(emailStatus?.unread || 0);
+        events.push({
+            id: `postman-status-${tick}`,
+            agent_id: 'postman-1',
+            agent_name: 'Postman',
+            state: emailStatus?.ok ? (unread > 0 ? 'working' : 'success') : 'error',
+            task_summary: emailStatus?.ok
+                ? `Postman checked inbox: ${unread} unread email(s)`
+                : 'Postman email check failed',
+            ts: now - 2900,
+            severity: emailStatus?.ok ? 'info' : 'error'
         });
         // WordPress blog activity hint (sanitized)
         const wpFresh = this.fileFresh('pluginwordpress', 120) || this.fileFresh('hosthobbit-helpdesk', 120);

@@ -229,6 +229,7 @@ let recentEvents: NormalizedEvent[] = [];
 function inferRole(agentId: string, agentName: string): AgentState['role'] {
   const s = `${agentId} ${agentName}`.toLowerCase();
   if (s.includes('jarvis') || s.includes('supervisor')) return 'supervisor';
+  if (s.includes('postman') || s.includes('email')) return 'email';
   if (s.includes('ops')) return 'ops';
   if (s.includes('support')) return 'support';
   if (s.includes('social')) return 'social';

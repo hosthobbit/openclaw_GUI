@@ -9,7 +9,7 @@ export type BridgeState = 'idle' | 'working' | 'success' | 'error';
 
 export interface VisualAgentContext {
   id: string;
-  role: 'ops' | 'support' | 'social' | 'supervisor';
+  role: 'ops' | 'support' | 'social' | 'email' | 'supervisor';
   state: VisualAgentState;
   targetState: BridgeState;
   deskX: number;

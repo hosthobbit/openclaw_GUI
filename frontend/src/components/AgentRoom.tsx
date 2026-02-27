@@ -33,9 +33,11 @@ const LINKS: Link[] = [
   { from: 'supervisor', to: 'ops' },
   { from: 'supervisor', to: 'support' },
   { from: 'supervisor', to: 'social' },
+  { from: 'supervisor', to: 'email' },
   { from: 'ops', to: 'supervisor' },
   { from: 'support', to: 'supervisor' },
-  { from: 'social', to: 'supervisor' }
+  { from: 'social', to: 'supervisor' },
+  { from: 'email', to: 'supervisor' }
 ];
 
 class RoomScene extends Phaser.Scene {
@@ -367,6 +369,7 @@ class RoomScene extends Phaser.Scene {
       ops: 0,
       support: 0,
       social: 0,
+      email: 0,
       supervisor: 0
     };
 
@@ -487,6 +490,7 @@ class RoomScene extends Phaser.Scene {
         activeLinks.add('supervisor->ops');
         activeLinks.add('supervisor->support');
         activeLinks.add('supervisor->social');
+        activeLinks.add('supervisor->email');
       } else {
         activeLinks.add(`${r}->supervisor`);
       }

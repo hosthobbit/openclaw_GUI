@@ -10,6 +10,7 @@ const CHARACTER_BY_ROLE: Record<DeskRole, string> = {
   ops: '🧑‍💻',
   support: '🧑‍💬',
   social: '🧑‍🎤',
+  email: '📮',
   supervisor: '🧙‍♂️'
 };
 
@@ -17,6 +18,7 @@ const BADGE_BY_ROLE: Record<DeskRole, string> = {
   ops: '🛠️',
   support: '💬',
   social: '📣',
+  email: '✉️',
   supervisor: '🧠'
 };
 

@@ -2,7 +2,7 @@ export type AgentState = {
   agent_id: string;
   agent_name: string;
   state: 'idle' | 'working' | 'success' | 'error';
-  role?: 'ops' | 'support' | 'social' | 'supervisor';
+  role?: 'ops' | 'support' | 'social' | 'email' | 'supervisor';
   lastSeen?: number;
 };
 

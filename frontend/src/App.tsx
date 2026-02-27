@@ -120,16 +120,17 @@ export const App: React.FC = () => {
     return 'Live';
   }, [healthState, currentTasks.length]);
 
-  const roleOf = (nameOrId: string): 'ops' | 'support' | 'social' | 'supervisor' => {
+  const roleOf = (nameOrId: string): 'ops' | 'support' | 'social' | 'email' | 'supervisor' => {
     const s = nameOrId.toLowerCase();
     if (s.includes('jarvis') || s.includes('supervisor')) return 'supervisor';
+    if (s.includes('postman') || s.includes('email')) return 'email';
     if (s.includes('support')) return 'support';
     if (s.includes('social')) return 'social';
     return 'ops';
   };
 
-  const iconForRole = (r: 'ops' | 'support' | 'social' | 'supervisor') =>
-    r === 'ops' ? '🛠️' : r === 'support' ? '💬' : r === 'social' ? '📣' : '🧠';
+  const iconForRole = (r: 'ops' | 'support' | 'social' | 'email' | 'supervisor') =>
+    r === 'ops' ? '🛠️' : r === 'support' ? '💬' : r === 'social' ? '📣' : r === 'email' ? '📮' : '🧠';
 
   const liveHandoffs = useMemo(() => {
     return events.slice(0, 8).map((e) => {
@@ -156,6 +157,7 @@ export const App: React.FC = () => {
     if (t.includes('facebook') || t.includes('posted')) return 'facebook';
     if (t.includes('whatsapp')) return 'whatsapp';
     if (t.includes('telegram')) return 'telegram';
+    if (t.includes('email') || t.includes('inbox') || t.includes('gmail')) return 'email';
     if (t.includes('token') || t.includes('service') || t.includes('bridge')) return 'ops';
     return 'system';
   };
@@ -179,6 +181,11 @@ export const App: React.FC = () => {
       if (t.includes('token')) return 'Validating/rotating token health';
       if (t.includes('bridge') || t.includes('service')) return 'Monitoring service health and uptime';
       return 'Running infrastructure and workflow checks';
+    }
+
+    if (a.includes('postman') || a.includes('email')) {
+      if (t.includes('unread')) return 'Checking inbox and flagging unread email';
+      return 'Monitoring inbox for new customer emails';
     }
 
     if (a.includes('jarvis')) {

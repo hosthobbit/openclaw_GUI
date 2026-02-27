@@ -1,4 +1,4 @@
-export type DeskRole = 'ops' | 'support' | 'social' | 'supervisor';
+export type DeskRole = 'ops' | 'support' | 'social' | 'email' | 'supervisor';
 
 export type Desk = {
   role: DeskRole;
@@ -64,6 +64,13 @@ export function buildOfficeLayout(width: number, height: number): OfficeLayout {
       role: 'social',
       x: roomRect.x + roomRect.width * 0.26,
       y: roomRect.y + roomRect.height * 0.12
+    },
+
+    // Email/Postman cluster
+    {
+      role: 'email',
+      x: roomRect.x - roomRect.width * 0.02,
+      y: roomRect.y + roomRect.height * 0.22
     },
 
     // Supervisor (Jarvis) at the top command desk
