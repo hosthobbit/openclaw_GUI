@@ -120,7 +120,7 @@ body {
 }
 
 .telemetry-badge {
-  margin-top: 2px;
+  margin-top: 0;
   padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid rgba(16, 185, 129, 0.45);
@@ -133,11 +133,11 @@ body {
 .mode-hint {
   font-size: 11px;
   color: #bfdbfe;
-  margin-top: 2px;
+  margin-top: 0;
 }
 
 .now-banner {
-  margin-top: 4px;
+  margin-top: 0;
   padding: 8px 10px;
   border-radius: 10px;
   border: 1px solid rgba(96, 165, 250, 0.4);
@@ -147,8 +147,15 @@ body {
 }
 
 
+.top-status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 8px;
+  align-items: start;
+}
+
 .incident-banner {
-  margin-top: 6px;
+  margin-top: 0;
   padding: 8px 10px;
   border-radius: 10px;
   font-size: 12px;
@@ -169,7 +176,7 @@ body {
 }
 
 .pipeline-banner {
-  margin-top: 8px;
+  margin-top: 0;
   padding: 6px 10px;
   border-radius: 999px;
   display: inline-flex;
@@ -584,6 +591,12 @@ body {
 
   .outcome-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .top-status-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

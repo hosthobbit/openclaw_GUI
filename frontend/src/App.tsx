@@ -302,31 +302,33 @@ export const App: React.FC = () => {
         </div>
       </header>
 
-      {latestIncident && (
-        <div className={`incident-banner incident-${latestIncident.severity}`}>
-          <strong>Incident:</strong> {latestIncident.task_summary}
+      <section className="top-status-grid">
+        {latestIncident && (
+          <div className={`incident-banner incident-${latestIncident.severity}`}>
+            <strong>Incident:</strong> {latestIncident.task_summary}
+          </div>
+        )}
+
+        <div className={`pipeline-banner pipeline-${healthState}`}>
+          <span className="indicator" />
+          <span className="text">
+            {healthState === 'green' &&
+              (staleAgentsCount > 0
+                ? `Pipeline healthy (quiet): ${staleAgentsCount} agent(s) idle/no recent updates`
+                : 'Pipeline healthy')}
+            {healthState === 'amber' &&
+              `Degraded: ${recentErrorCount} recent error(s), ${staleAgentsLongCount} agent(s) stale >5m`}
+            {healthState === 'red' &&
+              'Pipeline unhealthy: disconnected from bridge'}
+          </span>
         </div>
-      )}
 
-      <div className={`pipeline-banner pipeline-${healthState}`}>
-        <span className="indicator" />
-        <span className="text">
-          {healthState === 'green' &&
-            (staleAgentsCount > 0
-              ? `Pipeline healthy (quiet): ${staleAgentsCount} agent(s) idle/no recent updates`
-              : 'Pipeline healthy')}
-          {healthState === 'amber' &&
-            `Degraded: ${recentErrorCount} recent error(s), ${staleAgentsLongCount} agent(s) stale >5m`}
-          {healthState === 'red' &&
-            'Pipeline unhealthy: disconnected from bridge'}
-        </span>
-      </div>
+        <div className="telemetry-badge">Data source: Live sanitized telemetry • Secret exposure: blocked</div>
 
-      <div className="telemetry-badge">Data source: Live sanitized telemetry • Secret exposure: blocked</div>
+        <div className="mode-hint">{mode === 'ops' ? 'Ops mode: stable, low-motion, easy to read.' : 'Fun mode: high-motion office theatre with dramatic reactions.'}</div>
 
-      <div className="mode-hint">{mode === 'ops' ? 'Ops mode: stable, low-motion, easy to read.' : 'Fun mode: high-motion office theatre with dramatic reactions.'}</div>
-
-      <div className="now-banner">{nowSentence}</div>
+        <div className="now-banner">{nowSentence}</div>
+      </section>
 
 
       <main className="layout">
