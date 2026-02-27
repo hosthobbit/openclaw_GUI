@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY bridge/package.json bridge/package-lock.json* ./bridge/
+WORKDIR /app/bridge
+RUN npm install --only=production
+
+COPY bridge/tsconfig.json ./tsconfig.json
+COPY bridge/src ./src
+
+RUN npm install --only=development && npm run build && npm prune --production
+
+ENV NODE_ENV=production
+ENV BRIDGE_PORT=4000
+
+EXPOSE 4000
+
+CMD ["node", "dist/index.js"]
+

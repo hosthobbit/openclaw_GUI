@@ -1,0 +1,25 @@
+{
+  "name": "agent-theatre-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OpenClaw Agent Theatre frontend (React + Phaser)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "phaser": "^3.88.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react-swc": "^4.2.3",
+    "serve": "^14.2.5",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}

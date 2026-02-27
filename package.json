@@ -1,0 +1,13 @@
+{
+  "name": "openclaw-agent-theatre-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "bridge"
+  ],
+  "scripts": {
+    "dev": "echo \"Use make dev for full dev setup\"",
+    "build": "echo \"Use make build for Docker builds\""
+  }
+}

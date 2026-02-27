@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  bridge:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.bridge
+    environment:
+      - NODE_ENV=production
+      - BRIDGE_PORT=4000
+      - BRIDGE_API_KEY=${BRIDGE_API_KEY}
+      - OPENCLAW_MODE=${OPENCLAW_MODE:-mock}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - OPENCLAW_BASE_URL=${OPENCLAW_BASE_URL:-http://127.0.0.1:7777}
+      - OPENCLAW_API_KEY=${OPENCLAW_API_KEY:-}
+      - OPENCLAW_POLL_INTERVAL_MS=${OPENCLAW_POLL_INTERVAL_MS:-3000}
+      - OPENCLAW_POLL_MAX_BACKOFF_MS=${OPENCLAW_POLL_MAX_BACKOFF_MS:-30000}
+      - OPENCLAW_CB_FAIL_THRESHOLD=${OPENCLAW_CB_FAIL_THRESHOLD:-5}
+      - OPENCLAW_CB_COOLDOWN_MS=${OPENCLAW_CB_COOLDOWN_MS:-30000}
+      - RATE_LIMIT_API_PER_MIN_IP=${RATE_LIMIT_API_PER_MIN_IP:-60}
+      - RATE_LIMIT_API_PER_MIN_KEY=${RATE_LIMIT_API_PER_MIN_KEY:-120}
+      - RATE_LIMIT_WS_PER_MIN_IP=${RATE_LIMIT_WS_PER_MIN_IP:-20}
+      - RATE_LIMIT_WS_PER_MIN_KEY=${RATE_LIMIT_WS_PER_MIN_KEY:-40}
+    networks:
+      - theatre
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+    networks:
+      - theatre
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      - bridge
+      - frontend
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:80"
+    networks:
+      - theatre
+
+networks:
+  theatre:
+    driver: bridge
+
