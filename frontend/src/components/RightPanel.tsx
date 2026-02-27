@@ -9,6 +9,8 @@ type Props = {
   latestErrors: BridgeEvent[];
   successCount: number;
   agentTasks: AgentTask[];
+  latestEventTs?: number;
+  liveStatus: 'Live' | 'Quiet' | 'Degraded';
 };
 
 export const RightPanel: React.FC<Props> = ({
@@ -16,20 +18,31 @@ export const RightPanel: React.FC<Props> = ({
   currentTasks,
   latestErrors,
   successCount,
-  agentTasks
+  agentTasks,
+  latestEventTs,
+  liveStatus
 }) => {
   const onlineAgents = agents.length;
   const staleAgents = agents.filter(
     (a) => a.lastSeen && Date.now() - a.lastSeen > 30_000
   ).length;
 
+  const freshness = latestEventTs
+    ? Math.max(0, Math.floor((Date.now() - latestEventTs) / 1000))
+    : null;
+
   return (
     <div className="right-panel">
-      <section className="card">
-        <h2>Jarvis Supervisor</h2>
+      <section className="card supervisor-card">
+        <div className="supervisor-top">
+          <h2>Jarvis Supervisor</h2>
+          <span className={`supervisor-live live-${liveStatus.toLowerCase()}`}>{liveStatus}</span>
+        </div>
         <p className="muted">
-          High-level view of current agent tasks, errors and throughput. Read-only visualisation from the
-          OpenClaw bridge.
+          Live oversight of agent tasks, queue pressure, and runtime health.
+        </p>
+        <p className="supervisor-freshness">
+          {freshness === null ? 'Last update: waiting for telemetry…' : `Last update: ${freshness}s ago`}
         </p>
         <div className="stats-grid">
           <div className="stat">

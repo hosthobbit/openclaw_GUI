@@ -89,6 +89,8 @@ export const App: React.FC = () => {
     [events]
   );
 
+  const latestEventTs = useMemo(() => (events[0]?.ts ? events[0].ts : undefined), [events]);
+
   const staleAgentsCount = useMemo(
     () =>
       agents.filter((a) => a.lastSeen && now - a.lastSeen > 30_000).length,
@@ -111,6 +113,12 @@ export const App: React.FC = () => {
     if (recentErrorCount > 0 || staleAgentsLongCount > 0) return 'amber';
     return 'green';
   }, [status, recentErrorCount, staleAgentsLongCount]);
+
+  const liveStatus: 'Live' | 'Quiet' | 'Degraded' = useMemo(() => {
+    if (healthState === 'red' || healthState === 'amber') return 'Degraded';
+    if (currentTasks.length === 0) return 'Quiet';
+    return 'Live';
+  }, [healthState, currentTasks.length]);
 
   const roleOf = (nameOrId: string): 'ops' | 'support' | 'social' | 'supervisor' => {
     const s = nameOrId.toLowerCase();
@@ -292,6 +300,8 @@ export const App: React.FC = () => {
             latestErrors={latestErrors}
             successCount={successCount}
             agentTasks={agentTasks}
+            latestEventTs={latestEventTs}
+            liveStatus={liveStatus}
           />
         </aside>
       </main>

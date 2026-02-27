@@ -310,6 +310,47 @@ body {
   font-size: 15px;
 }
 
+.supervisor-card {
+  background: linear-gradient(140deg, rgba(30, 41, 59, 0.98), rgba(12, 74, 110, 0.45));
+  border-color: rgba(96, 165, 250, 0.5);
+}
+
+.supervisor-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.supervisor-live {
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.live-live {
+  color: #052e16;
+  background: #4ade80;
+}
+
+.live-quiet {
+  color: #082f49;
+  background: #7dd3fc;
+}
+
+.live-degraded {
+  color: #431407;
+  background: #fb923c;
+}
+
+.supervisor-freshness {
+  margin: 4px 0 2px;
+  font-size: 11px;
+  color: #bfdbfe;
+}
+
 .muted {
   color: #9ca3af;
 }
