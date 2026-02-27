@@ -209,8 +209,34 @@ body {
   flex-direction: column;
 }
 
-.conversation-list {
+.live-status-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.status-row {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  font-size: 11px;
+}
+
+.status-row span {
+  color: #dbeafe;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.conversation-list {
+  margin-top: 4px;
   overflow: auto;
 }
 

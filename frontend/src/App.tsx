@@ -196,6 +196,19 @@ export const App: React.FC = () => {
     });
   }, [events, agents]);
 
+  const latestJarvis = useMemo(() => events.find((e) => e.agent_name.toLowerCase().includes('jarvis')), [events]);
+  const latestUserLike = useMemo(
+    () => events.find((e) => /customer|inbox|whatsapp|telegram|reply/i.test(e.task_summary)),
+    [events]
+  );
+
+  const userStatus = latestUserLike
+    ? `Latest context: ${latestUserLike.task_summary}`
+    : 'No direct user-message telemetry in this sanitized mode yet.';
+  const jarvisStatus = latestJarvis
+    ? `Working on: ${latestJarvis.task_summary}`
+    : 'Waiting for next instruction.';
+
   return (
     <div className={`app app-mode-${mode}`}>
       <header className="app-header">
@@ -258,7 +271,7 @@ export const App: React.FC = () => {
           <div>
             <AgentRoom agents={agents} mode={mode} events={events} />
           </div>
-          <ConversationPanel events={events} />
+          <ConversationPanel events={events} userStatus={userStatus} jarvisStatus={jarvisStatus} />
         </section>
         <aside className="layout-side">
           <RightPanel
