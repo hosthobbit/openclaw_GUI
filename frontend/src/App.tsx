@@ -125,7 +125,7 @@ export const App: React.FC = () => {
     if (s.includes('jarvis') || s.includes('supervisor')) return 'supervisor';
     if (s.includes('postman') || s.includes('email')) return 'email';
     if (s.includes('support')) return 'support';
-    if (s.includes('social')) return 'social';
+    if (s.includes('social') || s.includes('facebook') || s.includes('blog')) return 'social';
     return 'ops';
   };
 
@@ -157,6 +157,7 @@ export const App: React.FC = () => {
     if (t.includes('facebook') || t.includes('posted')) return 'facebook';
     if (t.includes('whatsapp')) return 'whatsapp';
     if (t.includes('telegram')) return 'telegram';
+    if (t.includes('wordpress') || t.includes('blog')) return 'wordpress';
     if (t.includes('email') || t.includes('inbox') || t.includes('gmail')) return 'email';
     if (t.includes('token') || t.includes('service') || t.includes('bridge')) return 'ops';
     return 'system';
@@ -172,8 +173,17 @@ export const App: React.FC = () => {
       return 'Handling customer support queue';
     }
 
+    if (a.includes('facebook')) {
+      return 'Posting and scheduling Facebook updates';
+    }
+
+    if (a.includes('blog')) {
+      return 'Publishing WordPress blog content';
+    }
+
     if (a.includes('social')) {
       if (t.includes('facebook') || t.includes('posted')) return 'Posting update to Facebook page';
+      if (t.includes('wordpress') || t.includes('blog')) return 'Publishing WordPress blog content';
       return 'Preparing social content and posting queue';
     }
 

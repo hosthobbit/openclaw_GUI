@@ -49,10 +49,22 @@ class MockOpenClawClient {
                 role: 'support'
             },
             {
-                agent_id: 'social-1',
-                agent_name: 'Social Fox',
+                agent_id: 'facebook-1',
+                agent_name: 'Facebook Falcon',
                 state: 'idle',
                 role: 'social'
+            },
+            {
+                agent_id: 'blog-1',
+                agent_name: 'Blog Beaver',
+                state: 'idle',
+                role: 'social'
+            },
+            {
+                agent_id: 'postman-1',
+                agent_name: 'Postman',
+                state: 'idle',
+                role: 'email'
             },
             {
                 agent_id: 'jarvis',
@@ -175,7 +187,9 @@ class LocalTelemetryClient {
         const lastBatch = this.readJsonSafe('fb/last_batch_posts.json');
         const tokenStatus = this.readJsonSafe('fb/last_token_rotation.json');
         const emailStatus = this.readJsonSafe('scripts/email/postman_status.json');
-        const socialState = lastBatch?.ok === true ? 'success' : lastBatch?.ok === false ? 'error' : 'idle';
+        const facebookState = lastBatch?.ok === true ? 'success' : lastBatch?.ok === false ? 'error' : 'idle';
+        const wpBlogFresh = this.fileFresh('logs/hourly_wp_blog.log', 90);
+        const wpBlogState = wpBlogFresh ? 'working' : 'idle';
         const bridgeUp = this.serviceActive('agent-theatre-bridge');
         const fallbackMode = this.hasRecentBridgeFallback(5);
         const opsState = !bridgeUp ? 'error' : fallbackMode ? 'working' : 'success';
@@ -191,7 +205,8 @@ class LocalTelemetryClient {
             { agent_id: 'jarvis', agent_name: 'Jarvis', role: 'supervisor', state: 'working', lastSeen: now },
             { agent_id: 'ops-1', agent_name: 'Ops Owl', role: 'ops', state: opsState, lastSeen: now },
             { agent_id: 'support-1', agent_name: 'Support Squirrel', role: 'support', state: supportState, lastSeen: now },
-            { agent_id: 'social-1', agent_name: 'Social Fox', role: 'social', state: socialState, lastSeen: now },
+            { agent_id: 'facebook-1', agent_name: 'Facebook Falcon', role: 'social', state: facebookState, lastSeen: now },
+            { agent_id: 'blog-1', agent_name: 'Blog Beaver', role: 'social', state: wpBlogState, lastSeen: now },
             { agent_id: 'postman-1', agent_name: 'Postman', role: 'email', state: postmanState, lastSeen: now }
         ];
     }
@@ -273,12 +288,12 @@ class LocalTelemetryClient {
         const wpFresh = this.fileFresh('pluginwordpress', 120) || this.fileFresh('hosthobbit-helpdesk', 120);
         events.push({
             id: `wp-status-${tick}`,
-            agent_id: 'social-1',
-            agent_name: 'Social Fox',
+            agent_id: 'blog-1',
+            agent_name: 'Blog Beaver',
             state: wpFresh ? 'working' : 'idle',
             task_summary: wpFresh
-                ? 'WordPress publishing/maintenance activity detected'
-                : 'No recent WordPress post/publish activity detected',
+                ? 'WordPress blog publishing activity detected'
+                : 'No recent WordPress blog publish activity detected',
             ts: now - 3000,
             severity: 'info'
         });
@@ -290,8 +305,8 @@ class LocalTelemetryClient {
             if (p) {
                 events.push({
                     id: `fb-latest-${p.post_id || tick}`,
-                    agent_id: 'social-1',
-                    agent_name: 'Social Fox',
+                    agent_id: 'facebook-1',
+                    agent_name: 'Facebook Falcon',
                     state: p.status_code === 200 ? 'success' : 'error',
                     task_summary: p.status_code === 200
                         ? `Facebook publish complete: ${p.topic || 'page update'}`
@@ -304,10 +319,10 @@ class LocalTelemetryClient {
         else {
             events.push({
                 id: `social-prepare-${tick}`,
-                agent_id: 'social-1',
-                agent_name: 'Social Fox',
+                agent_id: 'facebook-1',
+                agent_name: 'Facebook Falcon',
                 state: 'working',
-                task_summary: 'Preparing next social content batch',
+                task_summary: 'Preparing next Facebook content batch',
                 ts: now - 3500,
                 severity: 'info'
             });
