@@ -16,10 +16,12 @@ export const App: React.FC = () => {
     'connecting'
   );
   const [showRecovered, setShowRecovered] = useState(false);
+  const [userPulse, setUserPulse] = useState(false);
 
   const dedupeKeysRef = useRef<string[]>([]);
   const dedupeSetRef = useRef<Set<string>>(new Set());
   const prevStatusRef = useRef<typeof status>('connecting');
+  const prevUserEventRef = useRef<string>('');
 
   const client = useMemo(() => createBridgeClient(), []);
 
@@ -209,6 +211,16 @@ export const App: React.FC = () => {
     ? `Working on: ${latestJarvis.task_summary}`
     : 'Waiting for next instruction.';
 
+  useEffect(() => {
+    const id = latestUserLike?.id || '';
+    if (id && id !== prevUserEventRef.current) {
+      prevUserEventRef.current = id;
+      setUserPulse(true);
+      const t = setTimeout(() => setUserPulse(false), 1400);
+      return () => clearTimeout(t);
+    }
+  }, [latestUserLike]);
+
   return (
     <div className={`app app-mode-${mode}`}>
       <header className="app-header">
@@ -271,7 +283,7 @@ export const App: React.FC = () => {
           <div>
             <AgentRoom agents={agents} mode={mode} events={events} />
           </div>
-          <ConversationPanel events={events} userStatus={userStatus} jarvisStatus={jarvisStatus} />
+          <ConversationPanel events={events} userStatus={userStatus} jarvisStatus={jarvisStatus} userPulse={userPulse} />
         </section>
         <aside className="layout-side">
           <RightPanel

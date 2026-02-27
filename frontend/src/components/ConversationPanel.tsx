@@ -5,9 +5,10 @@ type Props = {
   events: BridgeEvent[];
   userStatus: string;
   jarvisStatus: string;
+  userPulse?: boolean;
 };
 
-export const ConversationPanel: React.FC<Props> = ({ events, userStatus, jarvisStatus }) => {
+export const ConversationPanel: React.FC<Props> = ({ events, userStatus, jarvisStatus, userPulse }) => {
   const items = events.slice(0, 16);
 
   return (
@@ -16,7 +17,7 @@ export const ConversationPanel: React.FC<Props> = ({ events, userStatus, jarvisS
       <p className="muted small">Sanitized live stream of user/agent work context.</p>
 
       <div className="live-status-rows">
-        <div className="status-row"><strong>User</strong><span>{userStatus}</span></div>
+        <div className={`status-row ${userPulse ? 'status-pulse' : ''}`}><strong>User</strong><span>{userStatus}</span></div>
         <div className="status-row"><strong>Jarvis</strong><span>{jarvisStatus}</span></div>
       </div>
 

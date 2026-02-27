@@ -157,6 +157,19 @@ class LocalTelemetryClient {
             return false;
         }
     }
+    fileFresh(rel, maxAgeMinutes) {
+        try {
+            const p = path_1.default.join(this.root, rel);
+            if (!fs_1.default.existsSync(p))
+                return false;
+            const st = fs_1.default.statSync(p);
+            const ageMs = Date.now() - st.mtimeMs;
+            return ageMs <= maxAgeMinutes * 60000;
+        }
+        catch {
+            return false;
+        }
+    }
     async fetchAgents() {
         const now = Date.now();
         const lastBatch = this.readJsonSafe('fb/last_batch_posts.json');
@@ -213,14 +226,43 @@ class LocalTelemetryClient {
             ts: now - 1500,
             severity: fallbackMode ? 'warn' : 'info'
         });
-        // Support activity (sanitized operational message)
+        // Support channel activity (plain English)
+        const customerLogFresh = this.fileFresh('logs/customers_checks.log', 10);
         events.push({
             id: `support-queue-${tick}`,
             agent_id: 'support-1',
             agent_name: 'Support Squirrel',
-            state: 'working',
-            task_summary: 'Monitoring customer inbox channels (WhatsApp/Telegram) and triage queue',
+            state: customerLogFresh ? 'working' : 'idle',
+            task_summary: customerLogFresh
+                ? 'Support bot is checking customer messages (WhatsApp/Telegram) and triaging replies'
+                : 'Support bot is idle; no new WhatsApp/Telegram customer messages detected recently',
             ts: now - 2500,
+            severity: 'info'
+        });
+        // Ticket system activity hint (sanitized)
+        const ticketFresh = this.fileFresh('ticket-hobbitwebdesign-500.md', 120) || this.fileFresh('create_ticket_test.sh', 120);
+        events.push({
+            id: `ticket-status-${tick}`,
+            agent_id: 'support-1',
+            agent_name: 'Support Squirrel',
+            state: ticketFresh ? 'working' : 'idle',
+            task_summary: ticketFresh
+                ? 'Ticket system activity detected: support workflow is updating tickets'
+                : 'Ticket system is quiet right now',
+            ts: now - 2800,
+            severity: 'info'
+        });
+        // WordPress blog activity hint (sanitized)
+        const wpFresh = this.fileFresh('pluginwordpress', 120) || this.fileFresh('hosthobbit-helpdesk', 120);
+        events.push({
+            id: `wp-status-${tick}`,
+            agent_id: 'social-1',
+            agent_name: 'Social Fox',
+            state: wpFresh ? 'working' : 'idle',
+            task_summary: wpFresh
+                ? 'WordPress publishing/maintenance activity detected'
+                : 'No recent WordPress post/publish activity detected',
+            ts: now - 3000,
             severity: 'info'
         });
         // Social activity from latest FB post result (only latest post for clarity)
