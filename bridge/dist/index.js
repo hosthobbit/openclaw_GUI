@@ -90,6 +90,12 @@ app.use((req, res, next) => {
 function requireApiKey(req, res, next) {
     const requestId = req.requestId;
     const ip = getIp(req);
+    // For browser dashboard reads, allow trusted origin without key.
+    const origin = req.headers.origin;
+    const originAllowed = typeof origin === 'string' && ALLOWED_ORIGINS.includes(origin);
+    if (originAllowed) {
+        return next();
+    }
     if (!API_KEY) {
         logSecurity({
             type: 'auth_misconfigured',
