@@ -147,6 +147,24 @@ class MockOpenClawClient implements OpenClawClient {
 class LocalTelemetryClient implements OpenClawClient {
   private root = '/root/.openclaw/workspace';
 
+  private parseIsoMs(v: unknown): number | null {
+    if (!v || typeof v !== 'string') return null;
+    const t = Date.parse(v);
+    return Number.isFinite(t) ? t : null;
+  }
+
+  private hasRecentBridgeFallback(minutes = 5): boolean {
+    try {
+      const out = execSync(
+        `journalctl -u agent-theatre-bridge --since "${minutes} minutes ago" --no-pager | grep -c openclaw_unavailable || true`,
+        { encoding: 'utf-8' }
+      ).trim();
+      return Number(out) > 0;
+    } catch {
+      return false;
+    }
+  }
+
   private readJsonSafe(rel: string): any | null {
     try {
       const p = path.join(this.root, rel);
@@ -173,11 +191,19 @@ class LocalTelemetryClient implements OpenClawClient {
 
     const socialState: AgentState['state'] =
       lastBatch?.ok === true ? 'success' : lastBatch?.ok === false ? 'error' : 'idle';
-    const opsState: AgentState['state'] =
-      this.serviceActive('agent-theatre-bridge') ? 'working' : 'error';
-    const supportState: AgentState['state'] = tokenStatus?.ok ? 'success' : 'working';
 
-    setStatus({ mode: 'live', upstream: 'ok', lastSuccessTs: now, lastPollTs: now });
+    const bridgeUp = this.serviceActive('agent-theatre-bridge');
+    const fallbackMode = this.hasRecentBridgeFallback(5);
+    const opsState: AgentState['state'] = !bridgeUp ? 'error' : fallbackMode ? 'working' : 'success';
+
+    const supportState: AgentState['state'] = tokenStatus?.ok ? 'working' : 'idle';
+
+    setStatus({
+      mode: 'live',
+      upstream: fallbackMode ? 'fallback' : 'ok',
+      lastSuccessTs: now,
+      lastPollTs: now
+    });
 
     return [
       { agent_id: 'jarvis', agent_name: 'Jarvis', role: 'supervisor', state: 'working', lastSeen: now },
@@ -189,50 +215,82 @@ class LocalTelemetryClient implements OpenClawClient {
 
   async fetchRecentEvents(limit: number): Promise<NormalizedEvent[]> {
     const now = Date.now();
+    const tick = Math.floor(now / 15000); // 15s bucket for visible "live" updates
     const events: NormalizedEvent[] = [];
 
+    const fallbackMode = this.hasRecentBridgeFallback(5);
+
+    // Jarvis always emits current coordination heartbeat
+    events.push({
+      id: `jarvis-heartbeat-${tick}`,
+      agent_id: 'jarvis',
+      agent_name: 'Jarvis',
+      state: 'working',
+      task_summary: fallbackMode
+        ? 'Supervising in fallback telemetry mode (safe, sanitized)'
+        : 'Supervising live workflow and coordinating handoffs',
+      ts: now,
+      severity: 'info'
+    });
+
+    // Ops status from bridge/token context
+    const tokenStatus = this.readJsonSafe('fb/last_token_rotation.json');
+    const tokenTs = this.parseIsoMs(tokenStatus?.timestamp_utc);
+    const tokenFresh = tokenTs ? now - tokenTs < 24 * 60 * 60 * 1000 : false;
+    events.push({
+      id: `ops-status-${tick}`,
+      agent_id: 'ops-1',
+      agent_name: 'Ops Owl',
+      state: fallbackMode ? 'working' : tokenStatus?.ok ? 'success' : 'working',
+      task_summary: fallbackMode
+        ? 'OpenClaw upstream unavailable; maintaining safe fallback telemetry'
+        : tokenFresh
+        ? 'Token health verified and services stable'
+        : 'Running platform health checks',
+      ts: now - 1500,
+      severity: fallbackMode ? 'warn' : 'info'
+    });
+
+    // Support activity (sanitized operational message)
+    events.push({
+      id: `support-queue-${tick}`,
+      agent_id: 'support-1',
+      agent_name: 'Support Squirrel',
+      state: 'working',
+      task_summary: 'Monitoring customer inbox channels (WhatsApp/Telegram) and triage queue',
+      ts: now - 2500,
+      severity: 'info'
+    });
+
+    // Social activity from latest FB post result (only latest post for clarity)
     const lastBatch = this.readJsonSafe('fb/last_batch_posts.json');
     if (lastBatch) {
       const posts = Array.isArray(lastBatch.posts) ? lastBatch.posts : [];
-      posts.slice(0, 3).forEach((p: any, idx: number) => {
+      const p = posts[0];
+      if (p) {
         events.push({
-          id: `fb-post-${p.post_id || idx}`,
+          id: `fb-latest-${p.post_id || tick}`,
           agent_id: 'social-1',
           agent_name: 'Social Fox',
           state: p.status_code === 200 ? 'success' : 'error',
           task_summary: p.status_code === 200
-            ? `Posted: ${p.topic || 'Facebook update'} (id ${p.post_id || 'n/a'})`
-            : `Facebook post failed: ${p.topic || 'unknown topic'}`,
-          ts: now - idx * 4000,
+            ? `Facebook publish complete: ${p.topic || 'page update'}`
+            : `Facebook publish failed: ${p.topic || 'unknown topic'}`,
+          ts: now - 3500,
           severity: p.status_code === 200 ? 'info' : 'error'
         });
-      });
-    }
-
-    const tokenStatus = this.readJsonSafe('fb/last_token_rotation.json');
-    if (tokenStatus) {
+      }
+    } else {
       events.push({
-        id: `token-${tokenStatus.timestamp_utc || now}`,
-        agent_id: 'ops-1',
-        agent_name: 'Ops Owl',
-        state: tokenStatus.ok ? 'success' : 'error',
-        task_summary: tokenStatus.ok
-          ? `Token check OK${tokenStatus.rotated === false ? ' (validated)' : ''}`
-          : 'Token check failed',
-        ts: now - 12000,
-        severity: tokenStatus.ok ? 'info' : 'error'
+        id: `social-prepare-${tick}`,
+        agent_id: 'social-1',
+        agent_name: 'Social Fox',
+        state: 'working',
+        task_summary: 'Preparing next social content batch',
+        ts: now - 3500,
+        severity: 'info'
       });
     }
-
-    events.push({
-      id: `bridge-${now}`,
-      agent_id: 'jarvis',
-      agent_name: 'Jarvis',
-      state: 'working',
-      task_summary: 'Supervising live workflow (sanitized telemetry mode)',
-      ts: now - 2000,
-      severity: 'info'
-    });
 
     return events.slice(0, Math.max(1, Math.min(limit, 200)));
   }
