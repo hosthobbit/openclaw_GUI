@@ -239,39 +239,9 @@ class RoomScene extends Phaser.Scene {
     g.fillStyle(0x1f2937, 1);
     g.fillRoundedRect(doorX - 8, doorY - 26, 16, 52, 4);
 
-    // Props: plants and whiteboard (rectangular bases to avoid bubbles)
-    g.fillStyle(0x15803d, 1);
-    g.fillRoundedRect(
-      roomRect.x - roomRect.width / 2 + 18,
-      roomRect.y - roomRect.height / 2 + 20,
-      14,
-      18,
-      4
-    );
-    g.fillRoundedRect(
-      roomRect.x + roomRect.width / 2 - 28,
-      roomRect.y + roomRect.height / 2 - 28,
-      16,
-      20,
-      4
-    );
+    // Decorative background boxes removed for a cleaner stage.
+    // We keep only room, hallway, and door.
 
-    g.fillStyle(0x111827, 1);
-    g.fillRoundedRect(
-      roomRect.x - 80,
-      roomRect.y - roomRect.height / 2 + 16,
-      160,
-      40,
-      6
-    );
-
-    // Desks per role
-    g.lineStyle(1, 0x4b5563, 1);
-    desks.forEach((d) => {
-      g.fillStyle(0x1f2937, 1);
-      g.fillRoundedRect(d.x - 46, d.y - 10, 92, 24, 6);
-      g.strokeRoundedRect(d.x - 46, d.y - 10, 92, 24, 6);
-    });
   }
 
   private getDeskFor(role: DeskRole, index: number): { x: number; y: number } {
