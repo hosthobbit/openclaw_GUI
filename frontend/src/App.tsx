@@ -120,6 +120,26 @@ export const App: React.FC = () => {
     return 'Live';
   }, [healthState, currentTasks.length]);
 
+  const latestIncident = useMemo(() => {
+    const bad = events.find((e) => e.severity === 'error' || e.severity === 'warn');
+    return bad || null;
+  }, [events]);
+
+  const todaysCounters = useMemo(() => {
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+    const start = dayStart.getTime();
+    const today = events.filter((e) => e.ts >= start);
+    const by = (rx: RegExp) => today.filter((e) => rx.test(e.task_summary)).length;
+    return {
+      tickets: by(/ticket/i),
+      facebook: by(/facebook publish|facebook/i),
+      wordpress: by(/wordpress|blog/i),
+      email: by(/inbox|email|unread/i),
+      errors: today.filter((e) => e.severity === 'error').length
+    };
+  }, [events]);
+
   const roleOf = (nameOrId: string): 'ops' | 'support' | 'social' | 'email' | 'supervisor' => {
     const s = nameOrId.toLowerCase();
     if (s.includes('jarvis') || s.includes('supervisor')) return 'supervisor';
@@ -282,6 +302,12 @@ export const App: React.FC = () => {
         </div>
       </header>
 
+      {latestIncident && (
+        <div className={`incident-banner incident-${latestIncident.severity}`}>
+          <strong>Incident:</strong> {latestIncident.task_summary}
+        </div>
+      )}
+
       <div className={`pipeline-banner pipeline-${healthState}`}>
         <span className="indicator" />
         <span className="text">
@@ -322,6 +348,17 @@ export const App: React.FC = () => {
           />
         </aside>
       </main>
+
+      <section className="outcome-counters card">
+        <h3>Outcome counters (today)</h3>
+        <div className="outcome-grid">
+          <div className="stat"><div className="label">Tickets</div><div className="value">{todaysCounters.tickets}</div></div>
+          <div className="stat"><div className="label">Facebook posts</div><div className="value">{todaysCounters.facebook}</div></div>
+          <div className="stat"><div className="label">WordPress blogs</div><div className="value">{todaysCounters.wordpress}</div></div>
+          <div className="stat"><div className="label">Emails checked</div><div className="value">{todaysCounters.email}</div></div>
+          <div className="stat"><div className="label">Errors</div><div className="value error">{todaysCounters.errors}</div></div>
+        </div>
+      </section>
 
       <section className="timeline-wrapper">
         <Timeline events={events} />

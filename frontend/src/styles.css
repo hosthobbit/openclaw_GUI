@@ -147,6 +147,27 @@ body {
 }
 
 
+.incident-banner {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(30, 41, 59, 0.55);
+}
+
+.incident-warn {
+  border-color: rgba(251, 146, 60, 0.75);
+  background: rgba(67, 20, 7, 0.35);
+  color: #fed7aa;
+}
+
+.incident-error {
+  border-color: rgba(248, 113, 113, 0.75);
+  background: rgba(69, 10, 10, 0.45);
+  color: #fecaca;
+}
+
 .pipeline-banner {
   margin-top: 8px;
   padding: 6px 10px;
@@ -541,9 +562,23 @@ body {
   border-color: rgba(244, 114, 182, 0.5);
 }
 
+.outcome-counters {
+  margin-top: 8px;
+}
+
+.outcome-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
 @media (max-width: 1200px) {
   .split-main {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .outcome-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
