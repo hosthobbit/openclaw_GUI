@@ -44,6 +44,7 @@ const LINKS: Link[] = [
 class RoomScene extends Phaser.Scene {
   private agents: AgentState[] = [];
   private mode: 'ops' | 'fun' = 'ops';
+  private readonly positionStoreKey = 'agent-theatre.positions.v1';
   private metas: Map<string, AgentMeta> = new Map();
   private layout = buildOfficeLayout(900, 480);
   private linksGraphics!: Phaser.GameObjects.Graphics;
@@ -72,6 +73,27 @@ class RoomScene extends Phaser.Scene {
     this.events = events;
   }
 
+  private loadSavedPosition(agentId: string): { x: number; y: number } | null {
+    try {
+      const raw = localStorage.getItem(this.positionStoreKey);
+      if (!raw) return null;
+      const obj = JSON.parse(raw) as Record<string, { x: number; y: number }>;
+      return obj[agentId] || null;
+    } catch {
+      return null;
+    }
+  }
+
+  private savePosition(agentId: string, x: number, y: number) {
+    try {
+      const raw = localStorage.getItem(this.positionStoreKey);
+      const obj = raw ? (JSON.parse(raw) as Record<string, { x: number; y: number }>) : {};
+      obj[agentId] = { x, y };
+      localStorage.setItem(this.positionStoreKey, JSON.stringify(obj));
+    } catch {
+      // ignore storage errors
+    }
+  }
 
   create() {
     const width = this.scale.width;
@@ -173,6 +195,7 @@ class RoomScene extends Phaser.Scene {
       meta.visual.deskY = meta.sprites.body.y;
       meta.visual.hallwayX = meta.sprites.body.x;
       meta.visual.hallwayY = meta.sprites.body.y;
+      this.savePosition(meta.visual.id, meta.sprites.body.x, meta.sprites.body.y);
       this.draggingMeta = null;
     }
   }
@@ -210,6 +233,7 @@ class RoomScene extends Phaser.Scene {
       meta.visual.deskY = meta.sprites.body.y;
       meta.visual.hallwayX = meta.sprites.body.x;
       meta.visual.hallwayY = meta.sprites.body.y;
+      this.savePosition(meta.visual.id, meta.sprites.body.x, meta.sprites.body.y);
       this.draggingMeta = null;
     }
   }
@@ -264,17 +288,21 @@ class RoomScene extends Phaser.Scene {
       const hallwayX = this.layout.hallwayRect.x + this.layout.hallwayRect.width * 0.1;
       const hallwayY = this.layout.hallwayRect.y;
 
+      const saved = this.loadSavedPosition(agent.agent_id);
+      const startX = saved?.x ?? desk.x;
+      const startY = saved?.y ?? desk.y;
+
       const visual = initialVisualState(
         agent.agent_id,
         role,
         agent.state,
-        desk.x,
-        desk.y,
+        startX,
+        startY,
         hallwayX,
         hallwayY
       );
 
-      const sprites = createWorkerSprite(this, desk.x, desk.y, role, agent.agent_name);
+      const sprites = createWorkerSprite(this, startX, startY, role, agent.agent_name);
       meta = { visual, sprites, dragging: false };
       this.metas.set(agent.agent_id, meta);
       meta.sprites.body.setDepth(10);
