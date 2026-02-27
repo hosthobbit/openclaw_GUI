@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AgentRoom } from './components/AgentRoom';
 import { RightPanel } from './components/RightPanel';
-import { Timeline } from './components/Timeline';
 import { ConversationPanel } from './components/ConversationPanel';
 import { createBridgeClient, BridgeEvent, AgentState } from './lib/bridgeClient';
 
@@ -358,10 +357,6 @@ export const App: React.FC = () => {
           />
         </aside>
       </main>
-
-      <section className="timeline-wrapper">
-        <Timeline events={events} />
-      </section>
 
       {showRecovered && (
         <div className="toast toast-recovered">
