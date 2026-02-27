@@ -462,7 +462,6 @@ class RoomScene extends Phaser.Scene {
 
   private drawLinks(now: number) {
     this.linksGraphics.clear();
-    this.linksGraphics.lineStyle(this.mode === 'fun' ? 2.2 : 1.2, this.mode === 'fun' ? 0xf472b6 : 0x7dd3fc, this.mode === 'fun' ? 0.55 : 0.28);
 
     const rolePositions: Partial<Record<DeskRole, Phaser.Math.Vector2>> = {};
     for (const meta of this.metas.values()) {
@@ -475,24 +474,49 @@ class RoomScene extends Phaser.Scene {
       }
     }
 
+    // Build active directed links from recent events (last 12s)
+    const roleByAgent = new Map<string, DeskRole>();
+    for (const a of this.agents) {
+      roleByAgent.set(a.agent_id, (a.role || 'ops') as DeskRole);
+    }
+    const activeLinks = new Set<string>();
+    for (const ev of this.events) {
+      if (now - ev.ts > 12_000) continue;
+      const r = roleByAgent.get(ev.agent_id) || 'ops';
+      if (r === 'supervisor') {
+        activeLinks.add('supervisor->ops');
+        activeLinks.add('supervisor->support');
+        activeLinks.add('supervisor->social');
+      } else {
+        activeLinks.add(`${r}->supervisor`);
+      }
+    }
+
     this.linkPhase += 0.04;
     LINKS.forEach(({ from, to }) => {
       const a = rolePositions[from];
       const b = rolePositions[to];
       if (!a || !b) return;
 
+      const active = activeLinks.has(`${from}->${to}`);
+      this.linksGraphics.lineStyle(
+        this.mode === 'fun' ? 2.2 : 1.2,
+        active ? 0xef4444 : this.mode === 'fun' ? 0xf472b6 : 0x7dd3fc,
+        active ? 0.75 : this.mode === 'fun' ? 0.55 : 0.28
+      );
+
       this.linksGraphics.beginPath();
       this.linksGraphics.moveTo(a.x, a.y);
       this.linksGraphics.lineTo(b.x, b.y);
       this.linksGraphics.strokePath();
 
-      // Animated flow markers (small capsules rather than circles)
+      // Animated flow markers (red when actively passing info)
       const steps = 6;
       for (let i = 0; i <= steps; i++) {
         const t = (i / steps + this.linkPhase) % 1;
         const x = Phaser.Math.Linear(a.x, b.x, t);
         const y = Phaser.Math.Linear(a.y, b.y, t);
-        this.linksGraphics.fillStyle(0x38bdf8, 0.9);
+        this.linksGraphics.fillStyle(active ? 0xef4444 : 0x38bdf8, 0.95);
         this.linksGraphics.fillRoundedRect(x - 3, y - 1.5, 6, 3, 1.5);
       }
     });
