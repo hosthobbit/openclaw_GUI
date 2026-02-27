@@ -6,37 +6,19 @@ export type WorkerSprites = {
   label: Phaser.GameObjects.Text;
 };
 
-export function createWorkerTextures(scene: Phaser.Scene) {
-  const roles: DeskRole[] = ['ops', 'support', 'social', 'supervisor'];
-  roles.forEach((role) => {
-    const key = `worker-${role}`;
-    if (scene.textures.exists(key)) return;
+const CHARACTER_BY_ROLE: Record<DeskRole, string> = {
+  ops: '🧑‍💻',
+  support: '🧑‍💬',
+  social: '🧑‍🎤',
+  supervisor: '🧙‍♂️'
+};
 
-    const g = scene.add.graphics();
-    const palette: Record<DeskRole, number> = {
-      ops: 0x38bdf8,
-      support: 0x22c55e,
-      social: 0xa855f7,
-      supervisor: 0xf97316
-    };
-    const bodyColor = palette[role];
-
-    // Torso
-    g.fillStyle(bodyColor, 1);
-    g.fillRoundedRect(-10, -22, 20, 26, 6);
-
-    // Head (squared off to avoid bubbles)
-    g.fillStyle(0xf9fafb, 1);
-    g.fillRoundedRect(-8, -32, 16, 10, 3);
-
-    // Simple laptop on desk
-    g.fillStyle(0x020617, 0.9);
-    g.fillRoundedRect(-10, -6, 20, 8, 3);
-
-    g.generateTexture(key, 48, 56);
-    g.destroy();
-  });
-}
+const BADGE_BY_ROLE: Record<DeskRole, string> = {
+  ops: '🛠️',
+  support: '💬',
+  social: '📣',
+  supervisor: '🧠'
+};
 
 export function createWorkerSprite(
   scene: Phaser.Scene,
@@ -45,39 +27,33 @@ export function createWorkerSprite(
   role: DeskRole,
   name: string
 ): WorkerSprites {
-  createWorkerTextures(scene);
-  const sprite = scene.add.image(0, 0, `worker-${role}`);
-  sprite.setOrigin(0.5, 0.7);
-  sprite.setScale(1.25);
+  const shadow = scene.add
+    .ellipse(0, 8, 36, 10, 0x020617, 0.4)
+    .setOrigin(0.5, 0.5);
 
-  const roleIcon: Record<DeskRole, string> = {
-    ops: '🛠️',
-    support: '💬',
-    social: '📣',
-    supervisor: '🧠'
-  };
+  const character = scene.add
+    .text(0, 0, CHARACTER_BY_ROLE[role], {
+      fontSize: role === 'supervisor' ? '46px' : '42px'
+    })
+    .setOrigin(0.5, 0.82);
 
-  // Little character/icon feel: role emoji badge + tiny face icon.
-  const badge = scene.add.text(-18, -42, roleIcon[role], {
-    fontSize: '18px'
-  }).setOrigin(0.5, 0.5);
-
-  const face = scene.add.text(0, -30, '🙂', {
-    fontSize: '14px'
-  }).setOrigin(0.5, 0.5);
+  const badge = scene.add
+    .text(18, -34, BADGE_BY_ROLE[role], {
+      fontSize: '18px'
+    })
+    .setOrigin(0.5, 0.5);
 
   const label = scene.add
-    .text(x, y + 16, name, {
-      fontSize: '11px',
+    .text(x, y + 26, name, {
+      fontSize: '12px',
       color: '#ffffff'
     })
     .setOrigin(0.5, 0);
 
-  const container = scene.add.container(x, y, [sprite, badge, face]);
+  const container = scene.add.container(x, y, [shadow, character, badge]);
 
   return {
     body: container,
     label
   };
 }
-
