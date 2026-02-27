@@ -1,6 +1,6 @@
 ## OpenClaw Agent Theatre
 
-Read-only realtime visualisation of OpenClaw agents as characters in a shared room, with a secure bridge service and Dockerised deployment.
+Read-only realtime visualisation of OpenClaw agents as characters in a shared room, with a secure bridge service and Dockerised deployment. See **Installing on an OpenClaw server** for where to put it and how to integrate with your OpenClaw server.
 
 ### Structure
 
@@ -50,6 +50,114 @@ Services:
 - `nginx`: HTTPS reverse proxy exposed on `80/443`
 
 Place TLS certs in `deploy/certs` as `fullchain.pem` and `privkey.pem`.
+
+### Installing on an OpenClaw server
+
+Use this when you want to run the Agent Theatre on the same machine (or network) as your OpenClaw server so the bridge can talk to OpenClaw in **live** mode.
+
+#### 1. Where to put it
+
+- **Recommended:** Put the project next to or inside your OpenClaw tree so one server hosts both, e.g.:
+  - `/opt/openclaw/agent-theatre`, or
+  - `<your-openclaw-repo>/agent-theatre` (if you keep OpenClaw in a repo).
+- The bridge runs as its own Node process and only needs HTTP access to the OpenClaw API (read-only). It does not replace or modify the OpenClaw server.
+
+#### 2. Install steps
+
+On the OpenClaw server (or a host that can reach it):
+
+```bash
+# Clone (or copy) the Agent Theatre repo
+git clone https://github.com/hosthobbit/openclaw_GUI.git /opt/openclaw/agent-theatre
+cd /opt/openclaw/agent-theatre
+
+# Install and build frontend
+cd frontend && npm ci && npm run build && cd ..
+
+# Install bridge (no build needed if you run with ts-node, or build for production)
+cd bridge && npm ci && npm run build && cd ..
+```
+
+For production you can run the bridge with `node bridge/dist/index.js` (or use the Docker setup below).
+
+#### 3. Integrate with the OpenClaw server
+
+- **Bridge → OpenClaw (live mode)**  
+  Point the bridge at your OpenClaw API (read-only, localhost or private network only):
+
+  ```bash
+  export OPENCLAW_MODE=live
+  export OPENCLAW_BASE_URL=http://127.0.0.1:PORT   # or http://openclaw-host:PORT
+  # Optional if OpenClaw requires auth:
+  # export OPENCLAW_API_KEY=your-openclaw-api-key
+  ```
+
+  Replace `PORT` with the port your OpenClaw server listens on. The bridge will poll this URL for agents and events; it never exposes it to the browser.
+
+- **API key**  
+  Set the same key on bridge and frontend so the UI can call the bridge:
+
+  ```bash
+  export BRIDGE_API_KEY=your-secret-bridge-key
+  ```
+
+  In production, set `VITE_BRIDGE_API_KEY` to the same value when building the frontend (e.g. in CI or in `deploy/`), or use the same key in your runtime config if the frontend reads it from env.
+
+- **CORS**  
+  Set allowed browser origins (the URL where the UI is served):
+
+  ```bash
+  export ALLOWED_ORIGINS=https://your-domain.com,https://openclaw.your-domain.com
+  ```
+
+- **Serving the UI and bridge behind the same server**  
+  - Run the bridge (e.g. on `localhost:4000`).
+  - Serve the built frontend from `frontend/dist` with your existing web server (Nginx, Caddy, or OpenClaw’s static hosting if it has one).
+  - In Nginx, proxy the bridge and the UI, for example:
+
+    ```nginx
+    # Agent Theatre UI (static)
+    location /agent-theatre/ {
+        alias /opt/openclaw/agent-theatre/frontend/dist/;
+        try_files $uri $uri/ /agent-theatre/index.html;
+    }
+
+    # Agent Theatre bridge API + WebSocket
+    location /agent-theatre-api/ {
+        proxy_pass http://127.0.0.1:4000/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Request-ID $request_id;
+    }
+    ```
+
+  - Then build the frontend with the bridge URL that the browser will use, e.g.:
+
+    ```bash
+    cd frontend
+    VITE_BRIDGE_URL=https://your-domain.com/agent-theatre-api npm run build
+    ```
+
+  - Open the UI at `https://your-domain.com/agent-theatre/` (or the path you chose). The bridge is only reached via the proxy path; OpenClaw control endpoints stay on localhost/private network.
+
+- **Using Docker on the OpenClaw server**  
+  From `deploy/` you can run the full stack (frontend + bridge + Nginx) and only configure the bridge to use `OPENCLAW_MODE=live` and `OPENCLAW_BASE_URL` pointing at your OpenClaw server (e.g. `http://host.docker.internal:PORT` if OpenClaw runs on the host). See env vars above and in `.env.example`.
+
+#### 4. Quick checklist
+
+| Step | Action |
+|------|--------|
+| Place | Clone/copy repo to e.g. `/opt/openclaw/agent-theatre` |
+| Build | `frontend`: `npm ci && npm run build`; `bridge`: `npm ci && npm run build` |
+| Configure | `OPENCLAW_MODE=live`, `OPENCLAW_BASE_URL`, `BRIDGE_API_KEY`, `ALLOWED_ORIGINS` |
+| Run bridge | `node bridge/dist/index.js` (or Docker) with the env vars set |
+| Serve UI | Point Nginx/your server at `frontend/dist` and proxy `/agent-theatre-api/` to the bridge |
+| Build frontend URL | Use `VITE_BRIDGE_URL` = full URL to the proxy path (e.g. `https://your-domain.com/agent-theatre-api`) when building |
 
 ### Bridge API
 
