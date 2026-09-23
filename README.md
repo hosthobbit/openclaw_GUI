@@ -297,3 +297,11 @@ Use `/healthz` for container liveness and `/readyz` for traffic readiness in orc
   - In mock mode, events should appear within a few seconds; check bridge logs.
   - For real OpenClaw integration, plug your local read-only endpoints into `openclawClient.ts` and keep them on localhost/private network only.
 
+
+---
+
+## About Host Hobbit
+
+Built and maintained by **[Host Hobbit Ltd](https://hosthobbit.com)**: managed WordPress hosting, WHM/cPanel and VPS administration, security hardening and AI automation for businesses in the UK.
+
+Need help deploying this, or want something similar built for your business? [Get in touch](https://hosthobbit.com).
