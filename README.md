@@ -298,6 +298,10 @@ Use `/healthz` for container liveness and `/readyz` for traffic readiness in orc
   - For real OpenClaw integration, plug your local read-only endpoints into `openclawClient.ts` and keep them on localhost/private network only.
 
 
+## License
+
+MIT, see [LICENSE](LICENSE).
+
 ---
 
 ## About Host Hobbit
